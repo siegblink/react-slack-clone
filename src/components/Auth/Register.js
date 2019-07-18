@@ -202,6 +202,7 @@ export default class Register extends React.Component {
               </Button>
             </Segment>
           </Form>
+          {/* error message */}
           {errors.length > 0 && (
             <Message error>
               <h3>Error</h3>
