@@ -57,7 +57,7 @@ export default class Login extends React.Component {
     const { email, password, errors, loading } = this.state
 
     return (
-      <Grid textAlign='center' verticalAlign='middle' className='app'>
+      <Grid textAlign='center' className='app' style={{marginTop: '150px'}}>
         <Grid.Column style={{ maxWidth: 450 }}>
           {/* header */}
           <Header as='h1' icon color='violet' textAlign='center'>
