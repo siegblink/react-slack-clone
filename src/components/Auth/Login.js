@@ -36,7 +36,7 @@ export default class Login extends React.Component {
         .auth()
         .signInWithEmailAndPassword(email, password)
         .then(signedInUser => {
-          console.log(signedInUser)
+          // console.log(signedInUser)
           this.setState({ errors: [], loading: false })
         })
         .catch(err => {
