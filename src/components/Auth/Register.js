@@ -49,10 +49,10 @@ export default class Register extends React.Component {
   isFormValid = () => {
     if (this.isFormEmpty(this.state)) {
       // throw error
-      return generateError('Fill in all fields')
+      return this.generateError('Fill in all fields')
     } else if (!this.isPasswordValid(this.state)) {
       // throw error
-      return generateError('Password is invalid')
+      return this.generateError('Password is invalid')
     } else {
       // form valid
       return true

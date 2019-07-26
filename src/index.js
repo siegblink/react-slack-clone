@@ -33,7 +33,7 @@ class Root extends React.Component {
       }
     })
   }
-
+  
   render() {
     return this.props.isLoading ? (
       <Spinner />
