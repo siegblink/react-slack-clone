@@ -25,16 +25,26 @@ function Root(props) {
 
   useEffect(
     function() {
-      firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-          // console.log(user)
-          setUser(user)
-          history.push('/')
-        } else {
-          history.push('/login')
-          clearUser()
+      let didCancel = false
+      function fetchUser() {
+        if (!didCancel) {
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              // console.log(user)
+              setUser(user)
+              history.push('/')
+            } else {
+              history.push('/login')
+              clearUser()
+            }
+          })
         }
-      })
+      }
+      fetchUser()
+
+      return function() {
+        didCancel = true
+      }
     },
     [history, setUser, clearUser]
   )

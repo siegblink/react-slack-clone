@@ -1,26 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 import firebase from '../../firebase'
 import md5 from 'md5'
 import { Grid, Form, Segment, Button } from 'semantic-ui-react'
 import { Header, Message, Icon } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
 
-export default class Register extends React.Component {
-  state = {
+export default function Register() {
+  const [user, setUser] = useState({
     username: '',
     email: '',
     password: '',
     passwordConfirmation: '',
-    errors: [],
-    loading: false,
-    usersRef: firebase.database().ref('users'),
-  }
+  })
+  const [errors, setErrors] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [usersRef] = useState(firebase.database().ref('users'))
 
-  displayErrors = errors => {
+  function displayErrors(errors) {
     return errors.map((error, i) => <p key={i}>{error.message}</p>)
   }
 
-  isFormEmpty = ({ username, email, password, passwordConfirmation }) => {
+  function isFormEmpty({ username, email, password, passwordConfirmation }) {
     return (
       !username.length ||
       !email.length ||
@@ -29,7 +29,7 @@ export default class Register extends React.Component {
     )
   }
 
-  isPasswordValid = ({ password, passwordConfirmation }) => {
+  function isPasswordValid({ password, passwordConfirmation }) {
     if (password.length < 6 || passwordConfirmation.length < 6) {
       return false
     } else if (password !== passwordConfirmation) {
@@ -39,49 +39,49 @@ export default class Register extends React.Component {
     }
   }
 
-  generateError = message => {
-    let errors = []
+  function generateError(message) {
     let error = { message: message }
-    this.setState({ errors: errors.concat(error) })
+    setErrors(errors => errors.concat(error))
     return false
   }
 
-  isFormValid = () => {
-    if (this.isFormEmpty(this.state)) {
+  function isFormValid() {
+    if (isFormEmpty(user)) {
       // throw error
-      return this.generateError('Fill in all fields')
-    } else if (!this.isPasswordValid(this.state)) {
+      return generateError('Fill in all fields')
+    } else if (!isPasswordValid(user)) {
       // throw error
-      return this.generateError('Password is invalid')
+      return generateError('Password is invalid')
     } else {
       // form valid
       return true
     }
   }
 
-  handleChange = event => {
+  function handleChange(event) {
     const { name, value } = event.target
-    this.setState({ [name]: value })
+    setUser({ ...user, [name]: value })
   }
 
-  handleInputError = (errors, inputName) => {
+  function handleInputError(errors, inputName) {
     return errors.some(error => error.message.toLowerCase().includes(inputName))
       ? 'error'
       : ''
   }
 
-  saveUser = createdUser => {
-    return this.state.usersRef.child(createdUser.user.uid).set({
+  function saveUser(createdUser) {
+    return usersRef.child(createdUser.user.uid).set({
       name: createdUser.user.displayName,
       avatar: createdUser.user.photoURL,
     })
   }
 
-  handleSubmit = event => {
-    const { email, password } = this.state
+  function handleSubmit(event) {
+    const { username, email, password } = user
     event.preventDefault()
-    if (this.isFormValid()) {
-      this.setState({ errors: [], loading: true })
+    if (isFormValid()) {
+      setErrors([])
+      setLoading(true)
       firebase
         .auth()
         .createUserWithEmailAndPassword(email, password)
@@ -90,128 +90,114 @@ export default class Register extends React.Component {
           // update displayName and photoURL
           createdUser.user
             .updateProfile({
-              displayName: this.state.username,
+              displayName: username,
               photoURL: `http://gravatar.com/avatar/${md5(
                 createdUser.user.email
               )}?d=identicon`,
             })
             .then(() => {
-              this.saveUser(createdUser).then(() => {
+              saveUser(createdUser).then(() => {
                 console.log('user saved')
               })
-              this.setState({ loading: false })
+              setLoading(false)
             })
             .catch(err => {
               console.error(err.message)
-              this.setState({
-                errors: this.state.errors.concat(err),
-                loading: false,
-              })
+              setErrors(errors => errors.concat(err))
+              setLoading(false)
             })
         })
         .catch(err => {
           console.error(err.message)
-          this.setState({
-            errors: this.state.errors.concat(err),
-            loading: false,
-          })
+          setErrors(errors => errors.concat(err))
+          setLoading(false)
         })
     }
   }
 
-  render() {
-    const {
-      username,
-      email,
-      password,
-      passwordConfirmation,
-      errors,
-      loading,
-    } = this.state
-
-    return (
-      <Grid textAlign='center' verticalAlign='middle' className='app'>
-        <Grid.Column style={{ maxWidth: 450 }}>
-          {/* header */}
-          <Header as='h1' icon color='orange' textAlign='center'>
-            <Icon name='puzzle piece' color='orange' />
-            Register for DevChat
-          </Header>
-          {/* form */}
-          <Form onSubmit={this.handleSubmit} size='large'>
-            <Segment stacked>
-              {/* username */}
-              <Form.Input
-                fluid
-                name='username'
-                icon='user'
-                iconPosition='left'
-                placeholder='Username'
-                onChange={this.handleChange}
-                value={username}
-                type='text'
-              />
-              {/* email */}
-              <Form.Input
-                fluid
-                name='email'
-                icon='mail'
-                iconPosition='left'
-                placeholder='Email Address'
-                onChange={this.handleChange}
-                value={email}
-                className={this.handleInputError(errors, 'email')}
-                type='email'
-              />
-              {/* password */}
-              <Form.Input
-                fluid
-                name='password'
-                icon='lock'
-                iconPosition='left'
-                placeholder='Password'
-                onChange={this.handleChange}
-                value={password}
-                className={this.handleInputError(errors, 'password')}
-                type='password'
-              />
-              {/* password confirmation */}
-              <Form.Input
-                fluid
-                name='passwordConfirmation'
-                icon='repeat'
-                iconPosition='left'
-                placeholder='Password Confirmation'
-                onChange={this.handleChange}
-                value={passwordConfirmation}
-                className={this.handleInputError(errors, 'password')}
-                type='password'
-              />
-              {/* submit button */}
-              <Button
-                color='orange'
-                fluid
-                size='large'
-                className={loading ? 'loading' : ''}
-                disabled={loading}
-              >
-                Submit
-              </Button>
-            </Segment>
-          </Form>
-          {/* error message */}
-          {errors.length > 0 && (
-            <Message error>
-              <h3>Error</h3>
-              {this.displayErrors(errors)}
-            </Message>
-          )}
-          {/* message */}
-          <Message>
-            Already a user? <Link to='/login'>Login</Link>
+  const { username, email, password, passwordConfirmation } = user
+  return (
+    <Grid textAlign='center' verticalAlign='middle' className='app'>
+      <Grid.Column style={{ maxWidth: 450 }}>
+        {/* header */}
+        <Header as='h1' icon color='orange' textAlign='center'>
+          <Icon name='puzzle piece' color='orange' />
+          Register for DevChat
+        </Header>
+        {/* form */}
+        <Form onSubmit={handleSubmit} size='large'>
+          <Segment stacked>
+            {/* username */}
+            <Form.Input
+              fluid
+              name='username'
+              icon='user'
+              iconPosition='left'
+              placeholder='Username'
+              onChange={handleChange}
+              value={username}
+              type='text'
+            />
+            {/* email */}
+            <Form.Input
+              fluid
+              name='email'
+              icon='mail'
+              iconPosition='left'
+              placeholder='Email Address'
+              onChange={handleChange}
+              value={email}
+              className={handleInputError(errors, 'email')}
+              type='email'
+            />
+            {/* password */}
+            <Form.Input
+              fluid
+              name='password'
+              icon='lock'
+              iconPosition='left'
+              placeholder='Password'
+              onChange={handleChange}
+              value={password}
+              className={handleInputError(errors, 'password')}
+              type='password'
+            />
+            {/* password confirmation */}
+            <Form.Input
+              fluid
+              name='passwordConfirmation'
+              icon='repeat'
+              iconPosition='left'
+              placeholder='Password Confirmation'
+              onChange={handleChange}
+              value={passwordConfirmation}
+              className={handleInputError(errors, 'password')}
+              type='password'
+            />
+            {/* submit button */}
+            <Button
+              color='orange'
+              fluid
+              size='large'
+              className={loading ? 'loading' : ''}
+              disabled={loading}
+            >
+              Submit
+            </Button>
+          </Segment>
+        </Form>
+        {/* error message */}
+        {errors.length > 0 && (
+          <Message error>
+            <h3>Error</h3>
+            {displayErrors(errors)}
           </Message>
-        </Grid.Column>
-      </Grid>
-    )
-  }
+        )}
+        {/* message */}
+        <Message>
+          Already a user? <Link to='/login'>Login</Link>
+        </Message>
+      </Grid.Column>
+    </Grid>
+  )
 }
