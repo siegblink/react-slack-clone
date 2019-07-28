@@ -1,7 +1,5 @@
-import React, { Component } from 'react'
+import React from 'react'
 
-export default class MetaPanel extends Component {
-  render() {
-    return <div>MetaPanel</div>
-  }
+export default function MetaPanel() {
+  return <div>MetaPanel</div>
 }
