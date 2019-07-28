@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import App from './components/App'
 import Login from './components/Auth/Login'
@@ -20,36 +20,41 @@ import { composeWithDevTools } from 'redux-devtools-extension'
 
 const store = createStore(rootReducer, composeWithDevTools())
 
-class Root extends React.Component {
-  componentDidMount() {
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        // console.log(user)
-        this.props.setUser(user)
-        this.props.history.push('/')
-      } else {
-        this.props.history.push('/login')
-        this.props.clearUser()
-      }
-    })
-  }
-  
-  render() {
-    return this.props.isLoading ? (
-      <Spinner />
-    ) : (
-      <Switch>
-        <Route exact path='/' component={App} />
-        <Route path='/login' component={Login} />
-        <Route path='/register' component={Register} />
-      </Switch>
-    )
-  }
+function Root(props) {
+  const { history, setUser, clearUser, isLoading } = props
+
+  useEffect(
+    function() {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          // console.log(user)
+          setUser(user)
+          history.push('/')
+        } else {
+          history.push('/login')
+          clearUser()
+        }
+      })
+    },
+    [history, setUser, clearUser]
+  )
+
+  return isLoading ? (
+    <Spinner />
+  ) : (
+    <Switch>
+      <Route exact path='/' component={App} />
+      <Route path='/login' component={Login} />
+      <Route path='/register' component={Register} />
+    </Switch>
+  )
 }
 
-const mapStateToProps = state => ({
-  isLoading: state.user.isLoading,
-})
+function mapStateToProps(state) {
+  return {
+    isLoading: state.user.isLoading,
+  }
+}
 
 const RootWithAuth = withRouter(
   connect(
